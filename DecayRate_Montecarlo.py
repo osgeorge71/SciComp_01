@@ -44,8 +44,7 @@ class Funcion():
         #Calcular el resultado de la integral (con las constantes actualizadas)
         resultadoSoftware = factor1*factor2*factor3*factor4
         return resultadoSoftware
-        
-        
+          
     def graficar(self, x1, x2, tamPaso):
         #Componer muestras en la abscisa
         E = np.arange(x1,x2,tamPaso) #Iterar en tamaño de paso
@@ -78,6 +77,21 @@ class Montecarlo():
             if yr[i] <= f(xr[i]):
                 success+=1
         return success/nSamples*(x2-x1)*yMax
+    
+    def graficar(self, cantMuestras, mc1, mc2, mcSegm1, mcSegm2, resSw):
+        lst=[resSw]*len(cantMuestras)
+        #-Graficar*
+        plt.plot(cantMuestras,mc1,label="mc1")
+        plt.plot(cantMuestras,mc2,label="mc2")
+        plt.plot(cantMuestras,mcSegm1,label="mcSegm1")
+        plt.plot(cantMuestras,mcSegm2,label="mcSegm2")
+        plt.plot(cantMuestras,lst,label="valor objetivo")
+        plt.title("Aproximación de valores con Montecarlo")
+        plt.xlabel("Cantidad de muestras")
+        plt.ylabel("Valores proporcionados por el método")
+        plt.legend()
+        plt.show()
+
 
 def main():
     #Intervalo de trabajo para la función particular
@@ -92,36 +106,61 @@ def main():
     print("cálculo final del libro de Griffiths: ", resultadoGriffiths,", tao =",1.0/resultadoGriffiths)
     print("cálculo final constantes actuales: ", resultadoSoftware,", tao =",1.0/resultadoSoftware)
     
-    #-----------------------------------------------------------------------
-    print("Método de Montecarlo")
-    #Llamado al método de la clase para calcular integral con Montecarlo
-    nSamples = 500000    #Fijando el número de muestras 
-    mc = Montecarlo() #Instanciación de la clase en el objeto mc
-    print("... con el método 1")
-    Gamma = mc.calcIntegral_1(funcion.f,x1,x2,nSamples)
-    print("Cálculo obtenido con Montecarlo método 1: ", Gamma)
-    print("Tiempo de vida = 1/Gamma =", 1.0/Gamma, "contra",1.0/resultadoSoftware,"de la ref. con constantes actualizadas.")
-    #-------*
-    print("... con el método 2")
-    Gamma = mc.calcIntegral_2(funcion.f,x1,x2,funcion.cotaMax,nSamples)
-    print("Cálculo obtenido con Montecarlo método 2: ", Gamma)
-    print("Tiempo de vida = 1/Gamma =", 1.0/Gamma, "contra",1.0/resultadoSoftware,"de la ref. con constantes actualizadas.")
-    #-----------------------------------------------------------------------
-    #-----------------------------------------------------------------------
-    print("Método de Montecarlo segmentado")
-    div = (x2-x1)/10.0  #Se eligen 10 sub-intervalos
-    nSamples = int(nSamples/10); #Se divide el numero de muestras
-    subInterv = [i for i in np.arange(0.511,1.29,div)]  
-    #-------*
-    print("... con el método 1")
-    segm = [mc.calcIntegral_1(funcion.f,xx,xx+div,nSamples,) for xx in subInterv]
-    Gamma = sum(segm)
-    print("Tiempo de vida = 1/Gamma =", 1.0/Gamma, "contra",1.0/resultadoSoftware,"de la ref. con constantes actualizadas.")
-    #-------*
-    print("... con el método 2")
-    segm = [mc.calcIntegral_2(funcion.f,xx,xx+div,funcion.cotaMax,nSamples,) for xx in subInterv]
-    Gamma = sum(segm)
-    print("Tiempo de vida = 1/Gamma =", 1.0/Gamma, "contra",1.0/resultadoSoftware,"de la ref. con constantes actualizadas.")
+    #-Listas para almacenar resultados*
+    lstMontecarlo_1 = []
+    lstMontecarlo_2 = []
+    lstMontecarloSegm_1 = []
+    lstMontecarloSegm_2 = []
+    #-Generación de las cantidades de muestras para realizar los cálculos*
+    lstNumSamples = [i for i in range(10000,100000,20000)]
+    for nSamples in lstNumSamples:
+        #-----------------------------------------------------------------------
+        print("Método de Montecarlo")
+        #Llamado al método de la clase para calcular integral con Montecarlo
+        mc = Montecarlo() #Instanciación de la clase en el objeto mc
+        print("... con el método 1")
+        Gamma = mc.calcIntegral_1(funcion.f,x1,x2,nSamples)
+        print("Cálculo obtenido con Montecarlo método 1: ", Gamma)
+        print("Tiempo de vida = 1/Gamma =", 1.0/Gamma, "contra",1.0/resultadoSoftware,"de la ref. con constantes actualizadas.")
+        lstMontecarlo_1.append(1.0/Gamma)
+        #-------*
+        print("... con el método 2")
+        Gamma = mc.calcIntegral_2(funcion.f,x1,x2,funcion.cotaMax,nSamples)
+        print("Cálculo obtenido con Montecarlo método 2: ", Gamma)
+        print("Tiempo de vida = 1/Gamma =", 1.0/Gamma, "contra",1.0/resultadoSoftware,"de la ref. con constantes actualizadas.")
+        lstMontecarlo_2.append(1.0/Gamma)
+        #-----------------------------------------------------------------------
+        #-----------------------------------------------------------------------
+        print("Método de Montecarlo segmentado")
+        div = (x2-x1)/10.0  #Se eligen 10 sub-intervalos
+        nSamples = int(nSamples/10); #Se divide el numero de muestras
+        subInterv = [i for i in np.arange(0.511,1.29,div)]  
+        #-------*
+        print("... con el método 1")
+        segm = [mc.calcIntegral_1(funcion.f,xx,xx+div,nSamples,) for xx in subInterv]
+        Gamma = sum(segm)
+        print("Tiempo de vida = 1/Gamma =", 1.0/Gamma, "contra",1.0/resultadoSoftware,"de la ref. con constantes actualizadas.")
+        lstMontecarloSegm_1.append(1.0/Gamma)
+        #-------*
+        print("... con el método 2")
+        segm = [mc.calcIntegral_2(funcion.f,xx,xx+div,funcion.cotaMax,nSamples,) for xx in subInterv]
+        Gamma = sum(segm)
+        print("Tiempo de vida = 1/Gamma =", 1.0/Gamma, "contra",1.0/resultadoSoftware,"de la ref. con constantes actualizadas.")
+        lstMontecarloSegm_2.append(1.0/Gamma)
+    #-Graficar*
+    mc.graficar(lstNumSamples,lstMontecarlo_1,lstMontecarlo_2,lstMontecarloSegm_1,lstMontecarloSegm_2,1.0/resultadoSoftware)
+    #-Guardar en un archivo para cálculos posteriores*
+    # print("MC1")
+    # print(lstMontecarlo_1)
+    # print("MC2")
+    # print(lstMontecarlo_2)
+    # print("MCSegm1")
+    # print(lstMontecarloSegm_1)
+    # print("MCSegm2")
+    # print(lstMontecarloSegm_2)
+    # print("cantidades de muestras")
+    # print(lstNumSamples)
+
     
 if __name__ == "__main__":
     main()
